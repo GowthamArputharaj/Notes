@@ -1,0 +1,248 @@
+#object-oriented-programming
+
+##To Initialize and Use object
+
+$bar = new foo;
+
+If an object is converted to an object, it is not modified. 
+If a value of any other type is converted to an object, a new instance of the stdClass built-in class is created. 
+If the value was null, the new instance will be empty. 
+An array converts to an object with properties named by keys and corresponding values. Note that in this case before PHP 7.2.0 numeric keys have been inaccessible unless iterated.
+
+$arr = array(
+    'name' => 'Gowtham',
+    'place' => 'Madurai',
+    'language' => [
+        'primary' => (object)['backend' => 'PHP', 'frontend' => 'JavaScript'],
+        'secondary' => ['Python', 'C++']
+    ]
+);
+
+Note: If put the above array Initialization in a class
+Fatal error: Constant expression contains invalid operations Error will be thrown
+This is because of (object)
+
+$obj = (object) $arr;
+print_r($obj->{'name'}); // Outputs 'Gowtham'
+print_r($obj->{'language'}->primary); // Notice:  Trying to get property 'primary' of non-object
+print_r($obj->{'language'}['primary']->{'backend'}); // PHP
+
+$obj = (object) 'Gowtham';
+print_r($obj->scalar); // Outputs 'Gowtham';
+
+$obj1 = new \stdClass; // Instantiate stdClass object
+$obj2 = new class{}; // Instantiate anonymous class
+$obj3 = (object)[]; // Cast empty array to object
+
+var_dump($obj1); // object(stdClass)#1 (0) {}
+var_dump($obj2); // object(class@anonymous)#2 (0) {}
+var_dump($obj3); // object(stdClass)#3 (0) {}
+
+$obj1 and $obj3 are the same type, but $obj1 !== $obj3. 
+Also, all three will json_encode() to a simple JS object {}:
+
+echo json_encode([
+    new \stdClass,
+    new class{},
+    (object)[],
+]);
+
+Outputs: [{},{},{}]
+
+$obj4 = (new Foo)->bar; // gets bar parameter from Foo class
+
+(new Foo)->getBar()->setBar('name', 'value'); 
+// getBar() must return $this or new self or new self() or new static or new static()
+
+Within class methods non-static properties may be accessed by using -> (Object Operator): $this->property (where property is the name of the property). 
+Static properties are accessed by using the :: (Double Colon): self::$property. 
+
+The pseudo-variable $this is available inside any class method when that method is called from within an object context. 
+$this is a reference to the calling object 
+(usually the object to which the method belongs, 
+but possibly another object, if the method is called statically from the context of a secondary object).
+
+
+##compare objects
+$one = new Foo;
+$two = new Bar;
+$ref = $two;
+
+$one == $two; // true;
+$one === $two; // false;
+$ref == $two; // true;
+$ref === $two; // true;
+
+
+##parameter
+
+class SimpleClass
+{
+    // valid property declarations:
+    public $var1 = 'hello ' . 'world';
+    public $var2 = <<<EOD
+    hello world
+    EOD;
+    public $var3 = 1+2;
+    public $var7 = [true, false];
+    public $var8 = <<<'EOD'
+        hello world
+    EOD;
+
+    // invalid property declarations:
+    public $var4 = self::myStaticMethod(); // Constant expression contains invalid operations
+    public $var5 = $myVar; // Constant expression contains invalid operations
+    public $var6 = myConstant; // Warning:  Use of undefined constant myConstant - assumed 'myConstant'
+
+    public function toArray()
+    {
+        return (array)$this;
+    }
+
+}
+
+$obj = (new simpleclass);
+$obj->toArray();
+// Outputs
+    Array
+    (
+        [var1] => hello world
+        [*var2] => hello world
+        [SimpleClassvar3] => 3
+        [var7] => Array
+            (
+                [0] => 1
+                [1] => 
+            )
+
+        [var8] =>     hello world
+    )
+
+$obj->this(); (new simpleclass);
+// Outputs
+    SimpleClass Object
+    (
+        [var1] => hello world
+        [var2:protected] => hello world
+        [var3:SimpleClass:private] => 3
+        [var7] => Array
+            (
+                [0] => 1
+                [1] => 
+            )
+
+        [var8] =>     hello world
+    )
+
+$foo->$bar // Notice
+
+#Constants
+
+The default visibility of class constants is public.
+Class constants can be redefined by a child class.
+It is possible to define constants on a per-class basis remaining the same and unchangeable. 
+It's possible to reference the class using a variable. 
+    The variable's value can not be a keyword (e.g. self, parent and static).
+Note that class constants are allocated once per class, and not for each class instance.
+
+const ONE = 1;
+class MyClass
+{
+    const TWO = ONE * 2;
+    const THREE = ONE + self::TWO;
+    const SENTENCE = 'The value of THREE is '.self::THREE;
+    const CONSTANT = 'constant value';
+
+    // Class constant visibility modifiers, as of PHP 7.1.0
+    public const BAR = 'bar';
+    private const BAZ = 'baz';
+
+    function showConstant() {
+        echo  self::CONSTANT . "\n";
+    }
+}
+
+echo MyClass::CONSTANT . "\n";
+echo MyClass::BAZ; // Fatal error:  Uncaught Error: Cannot access private const MyClass::BAZ
+
+
+#Static
+
+Declaring class properties or methods as static makes them accessible without needing an instantiation of the class. 
+A property declared as static cannot be accessed with an instantiated class object (though a static method can).
+
+a non static member is tied to an instance of a class although 
+a static member is tied to the class, and not to a particular instance.
+
+a non static member exists for each instance of  class.
+a static member is shared by all instances of a class although 
+
+Static properties defined in both parent and child classes will hold DISTINCT values for each class. 
+Proper use of self:: vs. static:: are crucial inside of child methods to reference the intended static property.
+
+Static properties defined ONLY in the parent class will share a COMMON value.
+
+
+#Constructor
+
+Parent constructors are not called implicitly if the child class defines a constructor. 
+In order to run a parent constructor, a call to parent::__construct() within the child constructor is required. 
+If the child does not define a constructor then it may be inherited from the parent class just like a normal class method 
+    (if it was not declared as private).
+Constructors are ordinary methods which are called during the instantiation of their corresponding object. 
+    As such, they may define an arbitrary number of arguments, 
+        which may be required, 
+        may have a type, and 
+        may have a default value. 
+Constructor arguments are called by placing the arguments in parentheses after the class name.
+If a class has no constructor, or the constructor has no required arguments, the parentheses may be omitted.
+Constructor cannot be static.
+
+
+
+
+new Foo;
+new Foo($value1, $value2);
+
+class BaseClass {
+    function __construct() {
+        print "In BaseClass constructor\n";
+    }
+}
+
+class SubClass extends BaseClass {
+    function __construct() {
+        parent::__construct();
+        print "In SubClass constructor\n";
+    }
+}
+
+class OtherSubClass extends BaseClass {
+    // inherits BaseClass's constructor
+}
+
+// In BaseClass constructor
+$obj = new BaseClass();
+
+// In BaseClass constructor
+// In SubClass constructor
+$obj = new SubClass();
+
+// In BaseClass constructor
+$obj = new OtherSubClass();
+
+
+#Destructor
+
+Constructor cannot be static.
+destructors are always called on script end.
+destructors are called in order of their "context": first functions, then global objects
+    objects in function context are deleted in order as they are set (older objects first).
+    objects in global context are deleted in reverse order (older objects last)
+The destructor will be called even if script execution is stopped using exit(). 
+Calling exit() in a destructor will prevent the remaining shutdown routines from executing.
+
+Destructor unsetting order
+
+    Functions -> Function objects (older objects first) -> Global objects (older objects last)
+
